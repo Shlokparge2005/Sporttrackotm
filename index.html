@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>sporttrackotm - Cricket Club & Operations Manager</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            },
+            accent: {
+              400: '#38bdf8',
+              500: '#0ea5e9',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #020617; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+    .page-view { display: none; }
+    .page-view.active { display: block; animation: fadeIn 0.15s ease-out; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(2px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col bg-slate-950 text-slate-200 font-sans antialiased text-sm selection:bg-emerald-500/30 selection:text-emerald-300">
+
+  <!-- Minimal Top Navigation Bar -->
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-14 gap-4">
+        
+        <!-- Brand & Club Selector -->
+        <div class="flex items-center gap-3">
+          <a href="#home" class="flex items-center gap-2 group">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="font-bold tracking-tight text-white text-base">sporttrack<span class="text-emerald-400">otm</span></span>
+            <span class="hidden sm:inline-block text-[10px] font-mono text-slate-500 uppercase tracking-widest pl-2 border-l border-slate-800">cricket admin</span>
+          </a>
+
+          <!-- Multi-Club Switcher -->
+          <div class="hidden lg:flex items-center gap-1.5 pl-3 border-l border-slate-800 text-xs">
+            <span class="text-slate-500">Club:</span>
+            <select id="header-club-select" onchange="switchActiveClub(this.value)" class="bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs rounded-lg px-2.5 py-1 focus:outline-none focus:border-emerald-500 font-medium">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="hidden md:flex items-center space-x-1 text-xs font-medium">
+          <a href="#home" data-route="home" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Overview</a>
+          <a href="#matches" data-route="matches" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Matches</a>
+          <a href="#tournaments" data-route="tournaments" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Tournaments</a>
+          <a href="#results" data-route="results" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Scorecards</a>
+          <a href="#roster" data-route="roster" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Squad</a>
+          <a href="#coaches" data-route="coaches" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Coaches</a>
+          <a href="#attendance" data-route="attendance" class="nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors">Attendance</a>
+        </nav>
+
+        <!-- Right Quick Actions -->
+        <div class="flex items-center gap-2">
+          <button onclick="openModal('modal-club')" class="hidden sm:inline-flex px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs text-slate-300 hover:text-white transition-colors">
+            + New Club
+          </button>
+          <button onclick="openModal('modal-match')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Match
+          </button>
+
+          <!-- Mobile Hamburger -->
+          <button onclick="toggleMobileMenu()" class="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Mobile Sub-Navigation -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-800/80 bg-slate-950 px-4 py-3 space-y-2 text-xs">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+        <span class="text-slate-400">Selected Club:</span>
+        <select id="mobile-club-select" onchange="switchActiveClub(this.value)" class="bg-slate-900 border border-slate-800 text-slate-200 text-xs rounded px-2 py-1">
+          <!-- Populated dynamically -->
+        </select>
+      </div>
+      <div class="grid grid-cols-4 gap-1 pt-1">
+        <a href="#home" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Overview</a>
+        <a href="#matches" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Matches</a>
+        <a href="#tournaments" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Tournaments</a>
+        <a href="#results" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Scorecards</a>
+        <a href="#roster" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Squad</a>
+        <a href="#coaches" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Coaches</a>
+        <a href="#attendance" onclick="toggleMobileMenu(false)" class="p-2 text-center rounded bg-slate-900 text-slate-300">Attendance</a>
+        <button onclick="openModal('modal-club'); toggleMobileMenu(false);" class="p-2 text-center rounded bg-slate-850 text-emerald-400 font-medium">+ Club</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main View Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6">
+
+    <!-- ========================================== -->
+    <!-- 1. OVERVIEW SCREEN (#home)                 -->
+    <!-- ========================================== -->
+    <section id="view-home" class="page-view space-y-6">
+      
+      <!-- Top Minimal Header -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-xl font-bold text-white flex items-center gap-2">
+            <span id="hero-club-name">Apex Titans CC</span>
+            <span class="text-xs px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-normal">Active Club</span>
+          </h1>
+          <p class="text-xs text-slate-400 mt-0.5">Centralized cricket administration: squads, coaching staff, tournaments & scorecards.</p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2">
+          <button onclick="openModal('modal-player')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 hover:text-white transition-colors">
+            + Add Player
+          </button>
+          <button onclick="openModal('modal-distribute')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-medium text-cyan-400 transition-colors">
+            Distribute to Coach
+          </button>
+          <button onclick="openModal('modal-match')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Schedule Match
+          </button>
+        </div>
+      </div>
+
+      <!-- Minimal 4 Metrics Grid -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Club Squad Size</div>
+          <div class="text-2xl font-bold text-white mt-1" id="stat-squad-size">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Registered cricketers</div>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Assigned Coaches</div>
+          <div class="text-2xl font-bold text-cyan-400 mt-1" id="stat-coaches-count">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Mentoring this squad</div>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Upcoming Fixtures</div>
+          <div class="text-2xl font-bold text-white mt-1" id="stat-fixtures-count">0</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Scheduled matches</div>
+        </div>
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4">
+          <div class="text-xs text-slate-400">Nets Attendance</div>
+          <div class="text-2xl font-bold text-emerald-400 mt-1" id="stat-attendance-rate">0%</div>
+          <div class="text-[11px] text-slate-500 mt-0.5">Present / Total sessions</div>
+        </div>
+      </div>
+
+      <!-- Matches & Latest Result Split View -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        <!-- Next Upcoming Fixture -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Next Match On Schedule</span>
+            <a href="#matches" class="text-xs text-emerald-400 hover:text-emerald-300">All Fixtures &rarr;</a>
+          </div>
+          <div id="home-next-match-box" class="pt-1">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Latest Match Result -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Latest Official Result</span>
+            <a href="#results" class="text-xs text-emerald-400 hover:text-emerald-300">All Scorecards &rarr;</a>
+          </div>
+          <div id="home-last-result-box" class="pt-1">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 2. MATCHES & FIXTURES SCREEN (#matches)    -->
+    <!-- ========================================== -->
+    <section id="view-matches" class="page-view space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-lg font-bold text-white">Matches & Fixtures</h1>
+          <p class="text-xs text-slate-400">Match calendar, pitch venues, kickoff times and ball format.</p>
+        </div>
+        <div>
+          <button onclick="openModal('modal-match')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Add Match Fixture
+          </button>
+        </div>
+      </div>
+
+      <!-- Fixtures List -->
+      <div id="matches-list" class="space-y-3">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 3. TOURNAMENTS SCREEN (#tournaments)       -->
+    <!-- ========================================== -->
+    <section id="view-tournaments" class="page-view space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-lg font-bold text-white">Cricket Tournaments</h1>
+          <p class="text-xs text-slate-400">Leagues, T20 Cups, and multi-day championships.</p>
+        </div>
+        <div>
+          <button onclick="openModal('modal-tournament')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Add Tournament
+          </button>
+        </div>
+      </div>
+
+      <!-- Tournaments Grid -->
+      <div id="tournaments-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 4. RESULTS & SCORECARDS SCREEN (#results)  -->
+    <!-- ========================================== -->
+    <section id="view-results" class="page-view space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-lg font-bold text-white">Scorecards & Match Results</h1>
+          <p class="text-xs text-slate-400">Runs, wickets, overs, victory margins, and Player of the Match.</p>
+        </div>
+        <div>
+          <button onclick="openModal('modal-result')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Record Scorecard
+          </button>
+        </div>
+      </div>
+
+      <!-- Scorecards Ledger Table -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-[11px] font-semibold border-b border-slate-800">
+              <tr>
+                <th class="px-4 py-3">Fixture</th>
+                <th class="px-4 py-3">Scoreline (Runs/Wkts)</th>
+                <th class="px-4 py-3">Outcome</th>
+                <th class="px-4 py-3">POTM</th>
+                <th class="px-4 py-3">Notes</th>
+                <th class="px-4 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="results-table-body" class="divide-y divide-slate-800/60">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 5. SQUAD ROSTER SCREEN (#roster)           -->
+    <!-- ========================================== -->
+    <section id="view-roster" class="page-view space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-lg font-bold text-white">Squad Players & Coach Assignments</h1>
+          <p class="text-xs text-slate-400">Batters, bowlers, all-rounders, and dedicated mentors.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="openModal('modal-distribute')" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-medium text-cyan-400 transition-colors">
+            Distribute to Coach
+          </button>
+          <button onclick="openModal('modal-player')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Add Player
+          </button>
+        </div>
+      </div>
+
+      <!-- Filter row -->
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+        <div class="flex items-center gap-1.5">
+          <span class="text-slate-400">Role:</span>
+          <button onclick="filterSquad('All')" class="squad-filter px-2.5 py-1 rounded bg-slate-800 text-white font-medium">All</button>
+          <button onclick="filterSquad('Batter')" class="squad-filter px-2.5 py-1 rounded text-slate-400 hover:text-white">Batters</button>
+          <button onclick="filterSquad('Bowler')" class="squad-filter px-2.5 py-1 rounded text-slate-400 hover:text-white">Bowlers</button>
+          <button onclick="filterSquad('All-Rounder')" class="squad-filter px-2.5 py-1 rounded text-slate-400 hover:text-white">All-Rounders</button>
+          <button onclick="filterSquad('Wicketkeeper')" class="squad-filter px-2.5 py-1 rounded text-slate-400 hover:text-white">Wicketkeepers</button>
+        </div>
+        <div class="text-slate-400 text-[11px]" id="squad-count-label">0 Players</div>
+      </div>
+
+      <!-- Squad Table -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-[11px] font-semibold border-b border-slate-800">
+              <tr>
+                <th class="px-4 py-3">Cap</th>
+                <th class="px-4 py-3">Player Name</th>
+                <th class="px-4 py-3">Club</th>
+                <th class="px-4 py-3">Role</th>
+                <th class="px-4 py-3">Assigned Coach</th>
+                <th class="px-4 py-3">Runs</th>
+                <th class="px-4 py-3">Wkts</th>
+                <th class="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="roster-table-body" class="divide-y divide-slate-800/60">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 6. COACHES MANAGEMENT SCREEN (#coaches)    -->
+    <!-- ========================================== -->
+    <section id="view-coaches" class="page-view space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-lg font-bold text-white">Coaches & Mentorship Distribution</h1>
+          <p class="text-xs text-slate-400">Head coaches, batting mentors, bowling trainers, and assigned player groups.</p>
+        </div>
+        <div>
+          <button onclick="openModal('modal-coach')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-xs font-semibold text-slate-950 transition-colors">
+            + Add Coach
+          </button>
+        </div>
+      </div>
+
+      <!-- Coaches Grid -->
+      <div id="coaches-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Injected via JS -->
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 7. ATTENDANCE & STATS SCREEN (#attendance) -->
+    <!-- ========================================== -->
+    <section id="view-attendance" class="page-view space-y-5">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800/80">
+        <div>
+          <h1 class="text-lg font-bold text-white">Nets & Practice Attendance</h1>
+          <p class="text-xs text-slate-400">Formula: (Present / Total &times; 100). Quick check-in toggles for all players.</p>
+        </div>
+        <div>
+          <button onclick="logFullSquadNets()" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-200 transition-colors">
+            + Log Full Squad Session
+          </button>
+        </div>
+      </div>
+
+      <!-- Attendance Table -->
+      <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-[11px] font-semibold border-b border-slate-800">
+              <tr>
+                <th class="px-4 py-3">Player</th>
+                <th class="px-4 py-3">Club</th>
+                <th class="px-4 py-3">Sessions (Pres/Tot)</th>
+                <th class="px-4 py-3 w-40">Rate</th>
+                <th class="px-4 py-3 text-center">Check-In Action</th>
+              </tr>
+            </thead>
+            <tbody id="attendance-table-body" class="divide-y divide-slate-800/60">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS CONTAINER                           -->
+  <!-- ========================================== -->
+
+  <!-- 1. Add Cricket Club Modal -->
+  <div id="modal-club" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-sm p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Add New Cricket Club</h3>
+        <button onclick="closeModal('modal-club')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreateClub(event)" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Club Name *</label>
+          <input type="text" id="club-name" required placeholder="e.g. Royal Strikers CC" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Home Ground *</label>
+          <input type="text" id="club-ground" required placeholder="e.g. Oval Turf Pitch #1" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-club')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Save Club</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Add Coach Modal -->
+  <div id="modal-coach" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-sm p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Add Coach</h3>
+        <button onclick="closeModal('modal-coach')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreateCoach(event)" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Coach Full Name *</label>
+          <input type="text" id="coach-name" required placeholder="e.g. Rahul Dravid" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Specialization / Title *</label>
+          <select id="coach-role" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700 focus:outline-none focus:border-emerald-500">
+            <option value="Head Coach">Head Coach</option>
+            <option value="Batting Mentor">Batting Mentor</option>
+            <option value="Fast Bowling Coach">Fast Bowling Coach</option>
+            <option value="Spin & Tactics Coach">Spin & Tactics Coach</option>
+            <option value="Fielding & Fitness Coach">Fielding & Fitness Coach</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Assign to Club *</label>
+          <select id="coach-club" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700 focus:outline-none focus:border-emerald-500">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-coach')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Save Coach</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. Add Player Modal -->
+  <div id="modal-player" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-md p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Add Cricket Player</h3>
+        <button onclick="closeModal('modal-player')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreatePlayer(event)" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Player Full Name *</label>
+          <input type="text" id="p-name" required placeholder="e.g. Shubman Gill" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700 focus:outline-none focus:border-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Cap / Jersey # *</label>
+            <input type="number" id="p-jersey" min="1" max="99" required placeholder="e.g. 77" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Role *</label>
+            <select id="p-role" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <option value="Batter">Batter</option>
+              <option value="All-Rounder">All-Rounder</option>
+              <option value="Bowler">Bowler</option>
+              <option value="Wicketkeeper">Wicketkeeper</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Assign Club *</label>
+            <select id="p-club" onchange="updateCoachDropdownForPlayerModal(this.value)" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Assign to Coach</label>
+            <select id="p-coach" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Career Runs</label>
+            <input type="number" id="p-runs" min="0" value="0" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Career Wickets</label>
+            <input type="number" id="p-wickets" min="0" value="0" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-player')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Save Player</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Distribute Player to Coach Modal -->
+  <div id="modal-distribute" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-sm p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Distribute Player to Coach</h3>
+        <button onclick="closeModal('modal-distribute')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleDistributePlayer(event)" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Select Player *</label>
+          <select id="dist-player" onchange="syncDistributeModal(this.value)" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Assign Team / Club *</label>
+          <select id="dist-club" onchange="populateDistributeCoaches(this.value)" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Assign Coach *</label>
+          <select id="dist-coach" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-distribute')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Confirm Assignment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. Schedule Match Modal -->
+  <div id="modal-match" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-md p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Schedule Cricket Match</h3>
+        <button onclick="closeModal('modal-match')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreateMatch(event)" class="mt-4 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Team A (Host) *</label>
+            <select id="m-team-a" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Team B (Opponent) *</label>
+            <input type="text" id="m-team-b" required placeholder="e.g. Royal Strikers CC" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Tournament / Trophy *</label>
+          <input type="text" id="m-tournament" required placeholder="e.g. Premier T20 Cup" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Date *</label>
+            <input type="date" id="m-date" required class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Toss / Start Time *</label>
+            <input type="time" id="m-time" required class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Ground / Venue *</label>
+          <input type="text" id="m-venue" required placeholder="e.g. City Oval Pitch #1" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Ball / Overs</label>
+            <select id="m-format" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <option value="T20 (20 Overs)">T20 (20 Overs)</option>
+              <option value="One-Day (50 Overs)">One-Day (50 Overs)</option>
+              <option value="Red Ball Leather (40 Overs)">Red Ball Leather (40 Overs)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Status</label>
+            <select id="m-status" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <option value="Scheduled">Scheduled</option>
+              <option value="Live">In Progress</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-match')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Save Match</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 6. Create Tournament Modal -->
+  <div id="modal-tournament" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-sm p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Create Tournament</h3>
+        <button onclick="closeModal('modal-tournament')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreateTournament(event)" class="mt-4 space-y-3">
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Tournament Title *</label>
+          <input type="text" id="t-title" required placeholder="e.g. National Premier T20 Trophy" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Format *</label>
+          <select id="t-format" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+            <option value="T20 Championship">T20 Championship</option>
+            <option value="One-Day League (50 Overs)">One-Day League (50 Overs)</option>
+            <option value="Super-8 / T10 Blitz">Super-8 / T10 Blitz</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Start Date</label>
+            <input type="date" id="t-start" required class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">End Date</label>
+            <input type="date" id="t-end" required class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Ground / Stadium</label>
+          <input type="text" id="t-location" required placeholder="e.g. City Oval Turf" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-tournament')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Save Tournament</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 7. Record Scorecard Modal -->
+  <div id="modal-result" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-md p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-sm font-bold text-white">Record Cricket Scorecard</h3>
+        <button onclick="closeModal('modal-result')" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <form onsubmit="handleCreateResult(event)" class="mt-4 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Host Club *</label>
+            <select id="r-club" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <!-- Populated via JS -->
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Opponent Club *</label>
+            <input type="text" id="r-opp" required placeholder="Opponent team" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Host Score (e.g. 184/5 20ov) *</label>
+            <input type="text" id="r-score-a" required placeholder="184/5 (20.0 ov)" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Opponent Score *</label>
+            <input type="text" id="r-score-b" required placeholder="156/9 (20.0 ov)" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Outcome *</label>
+            <select id="r-outcome" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+              <option value="Win">Win</option>
+              <option value="Loss">Loss</option>
+              <option value="Tie/Draw">Tie / Draw</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Match Date *</label>
+            <input type="date" id="r-date" required class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Player of the Match (POTM)</label>
+          <input type="text" id="r-mvp" placeholder="e.g. Rohit Verma - 74*(42)" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+        </div>
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Notes / Margin Details</label>
+          <input type="text" id="r-notes" placeholder="e.g. Won by 28 runs on green turf" class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 text-xs border border-slate-700">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+          <button type="button" onclick="closeModal('modal-result')" class="px-3 py-1.5 rounded-lg bg-slate-800 text-xs text-slate-300">Cancel</button>
+          <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs">Save Scorecard</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Minimal Footer -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-slate-950 py-4 text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+        <span class="font-mono text-[11px]">sporttrackotm &bull; Unified Cricket Management</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button onclick="resetData()" class="text-slate-500 hover:text-emerald-400 underline transition-colors">Reset Demo Data</button>
+        <span>&copy; 2026 SportTrackOTM</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- JAVASCRIPT APPLICATION CORE                -->
+  <!-- ========================================== -->
+  <script>
+    const STORAGE_KEY = 'sporttrackotm_cricket_db_v4';
+
+    // Starter Data for Multi-Club Cricket
+    const INITIAL_DB = {
+      activeClubId: 'c-1',
+      clubs: [
+        { id: 'c-1', name: 'Apex Titans CC', ground: 'City Grand Oval Turf' },
+        { id: 'c-2', name: 'Royal Strikers CC', ground: 'Eden Riverside Complex' },
+        { id: 'c-3', name: 'Desert Vipers CC', ground: 'Metro Floodlit Stadium' }
+      ],
+      coaches: [
+        { id: 'ch-1', name: 'Rahul Dravid', role: 'Head Coach', clubId: 'c-1' },
+        { id: 'ch-2', name: 'Sarah Khan', role: 'Batting Mentor', clubId: 'c-1' },
+        { id: 'ch-3', name: 'Brendon McCullum', role: 'Head Coach', clubId: 'c-2' },
+        { id: 'ch-4', name: 'Wasim Akram', role: 'Fast Bowling Coach', clubId: 'c-2' },
+        { id: 'ch-5', name: 'Tom Moody', role: 'Tactics & Spin Mentor', clubId: 'c-3' }
+      ],
+      players: [
+        { id: 'p-1', name: 'Aarav Sharma', jersey: 18, position: 'Batter', clubId: 'c-1', coachId: 'ch-1', runs: 640, wickets: 2, attendance: { present: 19, total: 20 } },
+        { id: 'p-2', name: 'Rohit Verma', jersey: 45, position: 'Batter', clubId: 'c-1', coachId: 'ch-2', runs: 580, wickets: 6, attendance: { present: 18, total: 20 } },
+        { id: 'p-3', name: 'Jaspreet Singh', jersey: 93, position: 'Bowler', clubId: 'c-1', coachId: 'ch-1', runs: 45, wickets: 27, attendance: { present: 20, total: 20 } },
+        { id: 'p-4', name: 'Hardik Patel', jersey: 33, position: 'All-Rounder', clubId: 'c-1', coachId: 'ch-2', runs: 390, wickets: 19, attendance: { present: 17, total: 20 } },
+        { id: 'p-5', name: 'Kavya Nair', jersey: 7, position: 'Wicketkeeper', clubId: 'c-2', coachId: 'ch-3', runs: 410, wickets: 0, attendance: { present: 18, total: 20 } },
+        { id: 'p-6', name: 'Zayn Malik', jersey: 11, position: 'Bowler', clubId: 'c-2', coachId: 'ch-4', runs: 30, wickets: 22, attendance: { present: 16, total: 20 } },
+        { id: 'p-7', name: 'David Miller', jersey: 10, position: 'Batter', clubId: 'c-3', coachId: 'ch-5', runs: 520, wickets: 0, attendance: { present: 19, total: 20 } }
+      ],
+      matches: [
+        {
+          id: 'm-1',
+          clubId: 'c-1',
+          opponent: 'Royal Strikers CC',
+          tournament: 'Premier T20 Championship',
+          date: '2026-10-20',
+          time: '14:30',
+          venue: 'City Grand Oval Turf Pitch #1',
+          format: 'T20 (20 Overs)',
+          status: 'Scheduled'
+        },
+        {
+          id: 'm-2',
+          clubId: 'c-1',
+          opponent: 'Thunderbolts XI',
+          tournament: 'Inter-District 50-Over Cup',
+          date: '2026-10-28',
+          time: '09:30',
+          venue: 'Eden Riverside Complex',
+          format: 'One-Day (50 Overs)',
+          status: 'Scheduled'
+        },
+        {
+          id: 'm-3',
+          clubId: 'c-2',
+          opponent: 'Desert Vipers CC',
+          tournament: 'Premier T20 Championship',
+          date: '2026-10-22',
+          time: '18:00',
+          venue: 'Metro Floodlit Stadium',
+          format: 'T20 (20 Overs)',
+          status: 'Scheduled'
+        }
+      ],
+      tournaments: [
+        {
+          id: 't-1',
+          title: 'Premier T20 Championship 2026',
+          format: 'T20 Championship',
+          startDate: '2026-10-15',
+          endDate: '2026-11-20',
+          location: 'Grand Oval Complex',
+          status: 'Active'
+        },
+        {
+          id: 't-2',
+          title: 'Inter-District 50-Over Cup',
+          format: 'One-Day League (50 Overs)',
+          startDate: '2026-09-01',
+          endDate: '2026-12-15',
+          location: 'Regional Grounds',
+          status: 'Active'
+        }
+      ],
+      results: [
+        {
+          id: 'r-1',
+          clubId: 'c-1',
+          opponent: 'Falcon Hawks CC',
+          teamScore: '184/5 (20.0 ov)',
+          oppScore: '156/9 (20.0 ov)',
+          outcome: 'Win',
+          date: '2026-10-08',
+          mvp: 'Rohit Verma - 74*(42)',
+          notes: 'Won by 28 runs on batting track'
+        },
+        {
+          id: 'r-2',
+          clubId: 'c-1',
+          opponent: 'Dynamo XI',
+          teamScore: '248/8 (50.0 ov)',
+          oppScore: '248/10 (49.4 ov)',
+          outcome: 'Tie/Draw',
+          date: '2026-10-02',
+          mvp: 'Jaspreet Singh - 4/38 (10 ov)',
+          notes: 'Match Tied! Bowled out opponent on 298th ball'
+        }
+      ]
+    };
+
+    let state = null;
+    let squadFilterRole = 'All';
+
+    // State Initialization
+    function init() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          state = JSON.parse(stored);
+        } catch (e) {
+          state = JSON.parse(JSON.stringify(INITIAL_DB));
+          save();
+        }
+      } else {
+        state = JSON.parse(JSON.stringify(INITIAL_DB));
+        save();
+      }
+
+      syncClubDropdowns();
+      syncCoachSelects();
+      syncPlayerSelects();
+
+      handleRouting();
+      window.addEventListener('hashchange', handleRouting);
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function resetData() {
+      state = JSON.parse(JSON.stringify(INITIAL_DB));
+      save();
+      syncClubDropdowns();
+      syncCoachSelects();
+      syncPlayerSelects();
+      renderAll();
+      showToast('Reset to starter demo data', 'emerald');
+    }
+
+    function switchActiveClub(clubId) {
+      state.activeClubId = clubId;
+      save();
+      renderAll();
+      showToast(`Active Club: ${getCurrentClub().name}`, 'emerald');
+    }
+
+    function getCurrentClub() {
+      return state.clubs.find(c => c.id === state.activeClubId) || state.clubs[0];
+    }
+
+    function syncClubDropdowns() {
+      const headerSelect = document.getElementById('header-club-select');
+      const mobileSelect = document.getElementById('mobile-club-select');
+      const coachClubSelect = document.getElementById('coach-club');
+      const playerClubSelect = document.getElementById('p-club');
+      const distClubSelect = document.getElementById('dist-club');
+      const matchTeamASelect = document.getElementById('m-team-a');
+      const resultClubSelect = document.getElementById('r-club');
+
+      const optionsHtml = state.clubs.map(c => 
+        `<option value="${c.id}" ${c.id === state.activeClubId ? 'selected' : ''}>${c.name}</option>`
+      ).join('');
+
+      if (headerSelect) headerSelect.innerHTML = optionsHtml;
+      if (mobileSelect) mobileSelect.innerHTML = optionsHtml;
+      if (coachClubSelect) coachClubSelect.innerHTML = optionsHtml;
+      if (playerClubSelect) playerClubSelect.innerHTML = optionsHtml;
+      if (distClubSelect) distClubSelect.innerHTML = optionsHtml;
+      if (matchTeamASelect) matchTeamASelect.innerHTML = optionsHtml;
+      if (resultClubSelect) resultClubSelect.innerHTML = optionsHtml;
+    }
+
+    function syncCoachSelects() {
+      const activeClubId = document.getElementById('p-club')?.value || state.activeClubId;
+      updateCoachDropdownForPlayerModal(activeClubId);
+    }
+
+    function updateCoachDropdownForPlayerModal(clubId) {
+      const coachSelect = document.getElementById('p-coach');
+      if (!coachSelect) return;
+      const coaches = state.coaches.filter(c => c.clubId === clubId);
+      if (coaches.length === 0) {
+        coachSelect.innerHTML = `<option value="">No coaches in this club</option>`;
+      } else {
+        coachSelect.innerHTML = coaches.map(c => `<option value="${c.id}">${c.name} (${c.role})</option>`).join('');
+      }
+    }
+
+    function syncPlayerSelects() {
+      const distPlayer = document.getElementById('dist-player');
+      if (distPlayer) {
+        distPlayer.innerHTML = state.players.map(p => {
+          const club = state.clubs.find(c => c.id === p.clubId)?.name || 'Club';
+          return `<option value="${p.id}">${p.name} (#${p.jersey} &bull; ${club})</option>`;
+        }).join('');
+      }
+      if (state.players.length > 0) {
+        syncDistributeModal(state.players[0].id);
+      }
+    }
+
+    function syncDistributeModal(playerId) {
+      const player = state.players.find(p => p.id === playerId);
+      if (!player) return;
+      const distClub = document.getElementById('dist-club');
+      if (distClub) {
+        distClub.value = player.clubId;
+        populateDistributeCoaches(player.clubId, player.coachId);
+      }
+    }
+
+    function populateDistributeCoaches(clubId, preselectCoachId) {
+      const distCoach = document.getElementById('dist-coach');
+      if (!distCoach) return;
+      const coaches = state.coaches.filter(c => c.clubId === clubId);
+      if (coaches.length === 0) {
+        distCoach.innerHTML = `<option value="">No coaches assigned to this club</option>`;
+      } else {
+        distCoach.innerHTML = coaches.map(c => 
+          `<option value="${c.id}" ${c.id === preselectCoachId ? 'selected' : ''}>${c.name} (${c.role})</option>`
+        ).join('');
+      }
+    }
+
+    // Hash Routing
+    function handleRouting() {
+      const hash = (window.location.hash || '#home').replace('#', '') || 'home';
+      const valid = ['home', 'matches', 'tournaments', 'results', 'roster', 'coaches', 'attendance'];
+      const route = valid.includes(hash) ? hash : 'home';
+
+      document.querySelectorAll('.page-view').forEach(v => {
+        v.classList.toggle('active', v.id === `view-${route}`);
+      });
+
+      document.querySelectorAll('.nav-link').forEach(link => {
+        const linkRoute = link.getAttribute('data-route') || link.getAttribute('href').replace('#', '');
+        if (linkRoute === route) {
+          link.className = 'nav-link px-3 py-1.5 rounded-lg text-white bg-slate-900 border border-slate-800 font-semibold transition-colors';
+        } else {
+          link.className = 'nav-link px-3 py-1.5 rounded-lg text-slate-400 hover:text-white transition-colors';
+        }
+      });
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      renderPage(route);
+    }
+
+    function toggleMobileMenu(force) {
+      const menu = document.getElementById('mobile-menu');
+      if (force === false) menu.classList.add('hidden');
+      else menu.classList.toggle('hidden');
+    }
+
+    function renderPage(route) {
+      switch (route) {
+        case 'home': renderHome(); break;
+        case 'matches': renderMatches(); break;
+        case 'tournaments': renderTournaments(); break;
+        case 'results': renderResults(); break;
+        case 'roster': renderRoster(); break;
+        case 'coaches': renderCoaches(); break;
+        case 'attendance': renderAttendance(); break;
+      }
+    }
+
+    function renderAll() {
+      renderHome();
+      renderMatches();
+      renderTournaments();
+      renderResults();
+      renderRoster();
+      renderCoaches();
+      renderAttendance();
+    }
+
+    // 1. RENDER HOME
+    function renderHome() {
+      const currentClub = getCurrentClub();
+      document.getElementById('hero-club-name').textContent = currentClub.name;
+
+      const clubPlayers = state.players.filter(p => p.clubId === currentClub.id);
+      const clubCoaches = state.coaches.filter(c => c.clubId === currentClub.id);
+      const clubMatches = state.matches.filter(m => m.clubId === currentClub.id);
+
+      document.getElementById('stat-squad-size').textContent = clubPlayers.length;
+      document.getElementById('stat-coaches-count').textContent = clubCoaches.length;
+      document.getElementById('stat-fixtures-count').textContent = clubMatches.length;
+
+      let presentSum = 0, totalSum = 0;
+      clubPlayers.forEach(p => {
+        presentSum += (p.attendance?.present || 0);
+        totalSum += (p.attendance?.total || 0);
+      });
+      const rate = totalSum > 0 ? Math.round((presentSum / totalSum) * 100) : 100;
+      document.getElementById('stat-attendance-rate').textContent = `${rate}%`;
+
+      // Next match box
+      const nextMatchBox = document.getElementById('home-next-match-box');
+      const nextMatch = clubMatches[0];
+      if (nextMatch) {
+        nextMatchBox.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-[11px] text-emerald-400 font-semibold uppercase tracking-wider">${nextMatch.tournament}</span>
+              <div class="text-sm font-bold text-white mt-0.5">${currentClub.name} vs ${nextMatch.opponent}</div>
+              <div class="text-xs text-slate-400 mt-1">${nextMatch.venue} &bull; ${nextMatch.date} @ ${nextMatch.time}</div>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded bg-slate-800 text-cyan-400 border border-slate-700 font-mono">${nextMatch.format}</span>
+          </div>
+        `;
+      } else {
+        nextMatchBox.innerHTML = `<p class="text-xs text-slate-500">No scheduled fixtures for ${currentClub.name}.</p>`;
+      }
+
+      // Last result box
+      const lastResultBox = document.getElementById('home-last-result-box');
+      const clubResults = state.results.filter(r => r.clubId === currentClub.id);
+      if (clubResults.length > 0) {
+        const last = clubResults[0];
+        lastResultBox.innerHTML = `
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="text-xs text-slate-400">${last.date} &bull; vs ${last.opponent}</div>
+              <div class="text-sm font-bold text-emerald-400 font-mono mt-0.5">${last.teamScore} vs ${last.oppScore}</div>
+              <div class="text-xs text-slate-300 mt-1"><strong class="text-amber-400">POTM:</strong> ${last.mvp}</div>
+            </div>
+            <span class="text-xs px-2.5 py-1 rounded font-bold ${last.outcome === 'Win' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}">
+              ${last.outcome}
+            </span>
+          </div>
+        `;
+      } else {
+        lastResultBox.innerHTML = `<p class="text-xs text-slate-500">No completed match scorecards for this club yet.</p>`;
+      }
+    }
+
+    // 2. RENDER MATCHES
+    function renderMatches() {
+      const container = document.getElementById('matches-list');
+      if (state.matches.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-slate-500 bg-slate-900/40 rounded-xl border border-slate-800">No scheduled matches found. Click "+ Add Match Fixture" above.</div>`;
+        return;
+      }
+
+      container.innerHTML = state.matches.map(m => {
+        const club = state.clubs.find(c => c.id === m.clubId);
+        return `
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">${m.tournament}</span>
+                <span class="text-[11px] px-2 py-0.2 rounded bg-slate-800 text-slate-300 font-mono">${m.format}</span>
+              </div>
+              <h3 class="text-sm font-bold text-white mt-1">${club?.name || 'Host'} vs ${m.opponent}</h3>
+              <div class="text-xs text-slate-400 mt-1 flex flex-wrap gap-3">
+                <span>Date: ${m.date} &bull; ${m.time}</span>
+                <span>Venue: ${m.venue}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 self-end sm:self-center">
+              <button onclick="deleteMatch('${m.id}')" class="text-xs text-rose-400 hover:text-rose-300 transition-colors">
+                Remove
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 3. RENDER TOURNAMENTS
+    function renderTournaments() {
+      const grid = document.getElementById('tournaments-grid');
+      grid.innerHTML = state.tournaments.map(t => `
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">${t.status}</span>
+              <span class="text-xs text-slate-500">${t.format}</span>
+            </div>
+            <h3 class="text-sm font-bold text-white">${t.title}</h3>
+            <div class="text-xs text-slate-400 mt-3 space-y-1">
+              <div>Dates: ${t.startDate} &mdash; ${t.endDate}</div>
+              <div>Ground: ${t.location}</div>
+            </div>
+          </div>
+          <div class="pt-3 mt-3 border-t border-slate-800 flex justify-end">
+            <button onclick="deleteTournament('${t.id}')" class="text-xs text-rose-400 hover:text-rose-300">Delete</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // 4. RENDER RESULTS
+    function renderResults() {
+      const tbody = document.getElementById('results-table-body');
+      if (state.results.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No match scorecards recorded. Click "+ Record Scorecard" above.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = state.results.map(r => {
+        const club = state.clubs.find(c => c.id === r.clubId)?.name || 'Host CC';
+        return `
+          <tr class="hover:bg-slate-850/40">
+            <td class="px-4 py-3">
+              <div class="font-bold text-white">${club} vs ${r.opponent}</div>
+              <div class="text-[11px] text-slate-500">${r.date}</div>
+            </td>
+            <td class="px-4 py-3 font-mono font-medium">
+              <span class="text-emerald-400">${r.teamScore}</span> &bull; 
+              <span class="text-slate-400">${r.oppScore}</span>
+            </td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${r.outcome === 'Win' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}">${r.outcome}</span>
+            </td>
+            <td class="px-4 py-3 text-slate-300">${r.mvp || '-'}</td>
+            <td class="px-4 py-3 text-slate-400">${r.notes || '-'}</td>
+            <td class="px-4 py-3 text-right">
+              <button onclick="deleteResult('${r.id}')" class="text-rose-400 hover:text-rose-300">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 5. RENDER SQUAD ROSTER
+    function filterSquad(role) {
+      squadFilterRole = role;
+      document.querySelectorAll('.squad-filter').forEach(btn => {
+        if (btn.textContent.trim() === (role === 'Batter' ? 'Batters' : role === 'Bowler' ? 'Bowlers' : role === 'All-Rounder' ? 'All-Rounders' : role === 'Wicketkeeper' ? 'Wicketkeepers' : role)) {
+          btn.className = 'squad-filter px-2.5 py-1 rounded bg-slate-800 text-white font-medium';
+        } else {
+          btn.className = 'squad-filter px-2.5 py-1 rounded text-slate-400 hover:text-white';
+        }
+      });
+      renderRoster();
+    }
+
+    function renderRoster() {
+      const tbody = document.getElementById('roster-table-body');
+      const filtered = state.players.filter(p => squadFilterRole === 'All' || p.position === squadFilterRole);
+      document.getElementById('squad-count-label').textContent = `${filtered.length} of ${state.players.length} Players`;
+
+      tbody.innerHTML = filtered.map(p => {
+        const club = state.clubs.find(c => c.id === p.clubId);
+        const coach = state.coaches.find(c => c.id === p.coachId);
+
+        return `
+          <tr class="hover:bg-slate-850/40">
+            <td class="px-4 py-3 font-mono font-bold text-emerald-400">#${p.jersey}</td>
+            <td class="px-4 py-3 font-bold text-white">${p.name}</td>
+            <td class="px-4 py-3 text-slate-400">${club?.name || 'Unassigned'}</td>
+            <td class="px-4 py-3">
+              <span class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300">${p.position}</span>
+            </td>
+            <td class="px-4 py-3 text-cyan-400 font-medium">
+              ${coach ? `${coach.name} <span class="text-slate-500 text-[10px]">(${coach.role})</span>` : '<span class="text-amber-500">Unassigned</span>'}
+            </td>
+            <td class="px-4 py-3 font-mono text-emerald-400">${p.runs || 0}</td>
+            <td class="px-4 py-3 font-mono text-cyan-400">${p.wickets || 0}</td>
+            <td class="px-4 py-3 text-right">
+              <button onclick="deletePlayer('${p.id}')" class="text-rose-400 hover:text-rose-300">Remove</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // 6. RENDER COACHES
+    function renderCoaches() {
+      const grid = document.getElementById('coaches-grid');
+      grid.innerHTML = state.coaches.map(c => {
+        const club = state.clubs.find(x => x.id === c.clubId);
+        const assignedPlayers = state.players.filter(p => p.coachId === c.id);
+
+        return `
+          <div class="bg-slate-900/60 border border-slate-800/80 rounded-xl p-4 flex flex-col justify-between">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">${c.role}</span>
+                <span class="text-xs text-slate-500">${club?.name || 'Club'}</span>
+              </div>
+              <h3 class="text-sm font-bold text-white">${c.name}</h3>
+              <div class="mt-3">
+                <div class="text-[11px] text-slate-400 font-medium uppercase tracking-wider mb-1.5">Assigned Athletes (${assignedPlayers.length})</div>
+                <div class="flex flex-wrap gap-1">
+                  ${assignedPlayers.length > 0 
+                    ? assignedPlayers.map(p => `<span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 text-[11px]">#${p.jersey} ${p.name}</span>`).join('')
+                    : `<span class="text-slate-600 text-xs">No athletes assigned yet</span>`
+                  }
+                </div>
+              </div>
+            </div>
+            <div class="pt-3 mt-3 border-t border-slate-800 flex justify-end">
+              <button onclick="deleteCoach('${c.id}')" class="text-xs text-rose-400 hover:text-rose-300">Remove Coach</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 7. RENDER ATTENDANCE
+    function renderAttendance() {
+      const tbody = document.getElementById('attendance-table-body');
+      tbody.innerHTML = state.players.map(p => {
+        const club = state.clubs.find(c => c.id === p.clubId);
+        const pres = p.attendance?.present || 0;
+        const tot = p.attendance?.total || 1;
+        const rate = Math.round((pres / tot) * 100);
+
+        return `
+          <tr class="hover:bg-slate-850/40">
+            <td class="px-4 py-3">
+              <div class="font-bold text-white">${p.name} <span class="text-slate-500 text-xs font-mono">#${p.jersey}</span></div>
+              <div class="text-[11px] text-slate-500">${p.position}</div>
+            </td>
+            <td class="px-4 py-3 text-slate-400">${club?.name || 'Club'}</td>
+            <td class="px-4 py-3 font-mono text-slate-300">${pres} / ${tot}</td>
+            <td class="px-4 py-3">
+              <div class="flex items-center justify-between text-[11px] font-bold mb-1">
+                <span class="${rate >= 80 ? 'text-emerald-400' : 'text-amber-400'}">${rate}%</span>
+              </div>
+              <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-emerald-500 h-1.5 rounded-full" style="width: ${rate}%;"></div>
+              </div>
+            </td>
+            <td class="px-4 py-3 text-center">
+              <div class="inline-flex gap-1.5">
+                <button onclick="logAttendance('${p.id}', true)" class="px-2 py-0.5 rounded text-[11px] bg-emerald-500/20 hover:bg-emerald-500 hover:text-slate-950 text-emerald-400 font-semibold transition-colors">
+                  + Present
+                </button>
+                <button onclick="logAttendance('${p.id}', false)" class="px-2 py-0.5 rounded text-[11px] bg-rose-500/20 hover:bg-rose-500 hover:text-slate-950 text-rose-400 font-semibold transition-colors">
+                  + Absent
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==========================================
+    // ACTION HANDLERS
+    // ==========================================
+
+    function handleCreateClub(e) {
+      e.preventDefault();
+      const name = document.getElementById('club-name').value.trim();
+      const ground = document.getElementById('club-ground').value.trim();
+      const newClub = { id: 'c-' + Date.now(), name, ground };
+      state.clubs.push(newClub);
+      state.activeClubId = newClub.id;
+      save();
+      closeModal('modal-club');
+      e.target.reset();
+      syncClubDropdowns();
+      renderAll();
+      showToast(`Club "${name}" created!`, 'emerald');
+    }
+
+    function handleCreateCoach(e) {
+      e.preventDefault();
+      const name = document.getElementById('coach-name').value.trim();
+      const role = document.getElementById('coach-role').value;
+      const clubId = document.getElementById('coach-club').value;
+      const newCoach = { id: 'ch-' + Date.now(), name, role, clubId };
+      state.coaches.push(newCoach);
+      save();
+      closeModal('modal-coach');
+      e.target.reset();
+      syncCoachSelects();
+      renderAll();
+      showToast(`Coach "${name}" assigned!`, 'emerald');
+    }
+
+    function deleteCoach(id) {
+      if (confirm('Delete this coach?')) {
+        state.coaches = state.coaches.filter(c => c.id !== id);
+        state.players.forEach(p => {
+          if (p.coachId === id) p.coachId = '';
+        });
+        save();
+        syncCoachSelects();
+        renderAll();
+        showToast('Coach removed.', 'rose');
+      }
+    }
+
+    function handleCreatePlayer(e) {
+      e.preventDefault();
+      const name = document.getElementById('p-name').value.trim();
+      const jersey = parseInt(document.getElementById('p-jersey').value, 10);
+      const position = document.getElementById('p-role').value;
+      const clubId = document.getElementById('p-club').value;
+      const coachId = document.getElementById('p-coach').value;
+      const runs = parseInt(document.getElementById('p-runs').value, 10) || 0;
+      const wickets = parseInt(document.getElementById('p-wickets').value, 10) || 0;
+
+      const newPlayer = {
+        id: 'p-' + Date.now(),
+        name,
+        jersey,
+        position,
+        clubId,
+        coachId,
+        runs,
+        wickets,
+        attendance: { present: 10, total: 10 }
+      };
+
+      state.players.push(newPlayer);
+      save();
+      closeModal('modal-player');
+      e.target.reset();
+      syncPlayerSelects();
+      renderAll();
+      showToast(`Player ${name} registered!`, 'emerald');
+    }
+
+    function deletePlayer(id) {
+      if (confirm('Remove player from squad?')) {
+        state.players = state.players.filter(p => p.id !== id);
+        save();
+        syncPlayerSelects();
+        renderAll();
+        showToast('Player deleted.', 'rose');
+      }
+    }
+
+    function handleDistributePlayer(e) {
+      e.preventDefault();
+      const playerId = document.getElementById('dist-player').value;
+      const clubId = document.getElementById('dist-club').value;
+      const coachId = document.getElementById('dist-coach').value;
+
+      const player = state.players.find(p => p.id === playerId);
+      if (!player) return;
+
+      player.clubId = clubId;
+      player.coachId = coachId;
+
+      save();
+      closeModal('modal-distribute');
+      renderAll();
+      const coach = state.coaches.find(c => c.id === coachId);
+      showToast(`Assigned ${player.name} to Coach ${coach?.name || 'Mentor'}!`, 'emerald');
+    }
+
+    function handleCreateMatch(e) {
+      e.preventDefault();
+      const clubId = document.getElementById('m-team-a').value;
+      const opponent = document.getElementById('m-team-b').value.trim();
+      const tournament = document.getElementById('m-tournament').value.trim();
+      const date = document.getElementById('m-date').value;
+      const time = document.getElementById('m-time').value;
+      const venue = document.getElementById('m-venue').value.trim();
+      const format = document.getElementById('m-format').value;
+      const status = document.getElementById('m-status').value;
+
+      const newMatch = {
+        id: 'm-' + Date.now(),
+        clubId,
+        opponent,
+        tournament,
+        date,
+        time,
+        venue,
+        format,
+        status
+      };
+
+      state.matches.unshift(newMatch);
+      save();
+      closeModal('modal-match');
+      e.target.reset();
+      renderAll();
+      showToast('Match fixture scheduled!', 'emerald');
+    }
+
+    function deleteMatch(id) {
+      if (confirm('Remove this match fixture?')) {
+        state.matches = state.matches.filter(m => m.id !== id);
+        save();
+        renderAll();
+        showToast('Match deleted.', 'rose');
+      }
+    }
+
+    function handleCreateTournament(e) {
+      e.preventDefault();
+      const title = document.getElementById('t-title').value.trim();
+      const format = document.getElementById('t-format').value;
+      const startDate = document.getElementById('t-start').value;
+      const endDate = document.getElementById('t-end').value;
+      const location = document.getElementById('t-location').value.trim();
+
+      const newTour = {
+        id: 't-' + Date.now(),
+        title,
+        format,
+        startDate,
+        endDate,
+        location,
+        status: 'Active'
+      };
+
+      state.tournaments.unshift(newTour);
+      save();
+      closeModal('modal-tournament');
+      e.target.reset();
+      renderAll();
+      showToast('Tournament added!', 'emerald');
+    }
+
+    function deleteTournament(id) {
+      if (confirm('Delete tournament?')) {
+        state.tournaments = state.tournaments.filter(t => t.id !== id);
+        save();
+        renderAll();
+        showToast('Tournament removed.', 'rose');
+      }
+    }
+
+    function handleCreateResult(e) {
+      e.preventDefault();
+      const clubId = document.getElementById('r-club').value;
+      const opponent = document.getElementById('r-opp').value.trim();
+      const teamScore = document.getElementById('r-score-a').value.trim();
+      const oppScore = document.getElementById('r-score-b').value.trim();
+      const outcome = document.getElementById('r-outcome').value;
+      const date = document.getElementById('r-date').value;
+      const mvp = document.getElementById('r-mvp').value.trim();
+      const notes = document.getElementById('r-notes').value.trim();
+
+      const newRes = {
+        id: 'r-' + Date.now(),
+        clubId,
+        opponent,
+        teamScore,
+        oppScore,
+        outcome,
+        date,
+        mvp,
+        notes
+      };
+
+      state.results.unshift(newRes);
+      save();
+      closeModal('modal-result');
+      e.target.reset();
+      renderAll();
+      showToast('Scorecard recorded!', 'emerald');
+    }
+
+    function deleteResult(id) {
+      if (confirm('Delete scorecard?')) {
+        state.results = state.results.filter(r => r.id !== id);
+        save();
+        renderAll();
+        showToast('Scorecard removed.', 'rose');
+      }
+    }
+
+    function logAttendance(playerId, isPresent) {
+      const p = state.players.find(x => x.id === playerId);
+      if (!p) return;
+      if (!p.attendance) p.attendance = { present: 0, total: 0 };
+      p.attendance.total += 1;
+      if (isPresent) p.attendance.present += 1;
+      save();
+      renderAll();
+      showToast(`Marked ${isPresent ? 'Present' : 'Absent'} for ${p.name}`, isPresent ? 'emerald' : 'amber');
+    }
+
+    function logFullSquadNets() {
+      state.players.forEach(p => {
+        if (!p.attendance) p.attendance = { present: 0, total: 0 };
+        p.attendance.total += 1;
+        p.attendance.present += 1;
+      });
+      save();
+      renderAll();
+      showToast('Logged full squad training session!', 'emerald');
+    }
+
+    // Modal Helpers
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    // Toast Utility
+    function showToast(msg, color = 'emerald') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `px-3.5 py-2 rounded-lg bg-slate-900 border ${color === 'rose' ? 'border-rose-500/50 text-rose-300' : 'border-emerald-500/50 text-emerald-300'} shadow-xl text-xs font-semibold pointer-events-auto transition-all`;
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 2500);
+    }
+
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
